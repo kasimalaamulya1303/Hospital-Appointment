@@ -1,0 +1,59 @@
+{% extends 'hospital/base.html' %}
+{% load static %}
+
+{% block title %}Hospital Staff & Admin Login - AuraCare{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7">
+            <div class="custom-card p-4 p-md-5 shadow-lg border-0" style="border-radius: 20px;">
+                <div class="text-center mb-4">
+                    <span class="brand-icon mx-auto mb-3" style="width: 56px; height: 56px; font-size: 1.6rem;">
+                        <i class="bi bi-shield-lock-fill"></i>
+                    </span>
+                    <h3 class="fw-bold text-dark mb-1">Staff Portal Login</h3>
+                    <p class="text-muted small">Sign in to manage appointments, doctor schedules, and clinical reports.</p>
+                </div>
+
+                <!-- Demo Credentials Callout -->
+                <div class="alert alert-info py-2 px-3 small mb-4 d-flex align-items-center">
+                    <i class="bi bi-info-circle-fill fs-5 me-2 text-info"></i>
+                    <div>
+                        <strong>Demo Credentials:</strong><br>
+                        Username: <code class="text-dark fw-bold">admin</code> | Password: <code class="text-dark fw-bold">admin123</code>
+                    </div>
+                </div>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label fw-semibold small">Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-person text-muted"></i></span>
+                            <input type="text" name="username" id="id_username" class="form-control" placeholder="Enter staff username" required autofocus>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="id_password" class="form-label fw-semibold small">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-key text-muted"></i></span>
+                            <input type="password" name="password" id="id_password" class="form-control" placeholder="Enter password" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100 py-2 fw-semibold">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to Staff Workspace
+                    </button>
+                </form>
+
+                <div class="text-center mt-4 pt-3 border-top small text-muted">
+                    Looking for Django ORM Admin site? <a href="/admin/" target="_blank" class="text-decoration-none fw-semibold">Open /admin/ &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,236 @@
+{% extends 'hospital/base.html' %}
+{% load static %}
+
+{% block title %}Hospital Staff & Appointment Operations - AuraCare{% endblock %}
+
+{% block content %}
+<div class="bg-light py-4 border-bottom">
+    <div class="container-fluid px-lg-5">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1 small">
+                        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Staff Workspace</li>
+                    </ol>
+                </nav>
+                <h1 class="h2 fw-bold mb-0">Hospital Operations & Appointments Control</h1>
+                <p class="text-muted small mb-0">Real-time schedule management, appointment confirmation, and clinical report filing.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="/admin/hospital/appointment/" target="_blank" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-gear-fill me-1"></i> Django Admin View
+                </a>
+                <a href="{% url 'book_appointment' %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-lg me-1"></i> New Booking
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid px-lg-5 py-4">
+    <!-- Stat Counters -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="stat-card p-3">
+                <div class="text-muted small fw-semibold">Total Bookings</div>
+                <div class="stat-number text-dark fs-3">{{ total_count }}</div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="stat-card p-3 border-warning border-opacity-50">
+                <div class="text-muted small fw-semibold">Pending Requests</div>
+                <div class="stat-number text-warning fs-3">{{ pending_count }}</div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="stat-card p-3 border-primary border-opacity-50">
+                <div class="text-muted small fw-semibold">Confirmed</div>
+                <div class="stat-number text-primary fs-3">{{ confirmed_count }}</div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="stat-card p-3 border-success border-opacity-50">
+                <div class="text-muted small fw-semibold">Completed</div>
+                <div class="stat-number text-success fs-3">{{ completed_count }}</div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="stat-card p-3 border-danger border-opacity-50">
+                <div class="text-muted small fw-semibold">Cancelled</div>
+                <div class="stat-number text-danger fs-3">{{ cancelled_count }}</div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="stat-card p-3 bg-primary text-white border-primary">
+                <div class="text-white-50 small fw-semibold">Today's Schedule</div>
+                <div class="stat-number text-white fs-3">{{ today_count }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters & Search Toolbar -->
+    <div class="custom-card p-3 mb-4">
+        <form method="GET" class="row g-2 align-items-center">
+            <!-- Status Filter -->
+            <div class="col-lg-3 col-md-6">
+                <div class="btn-group w-100" role="group">
+                    <a href="?status=All{% if doctor_filter != 'All' %}&doctor={{ doctor_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}" 
+                       class="btn btn-sm {% if status_filter == 'All' %}btn-dark{% else %}btn-outline-secondary{% endif %}">
+                        All
+                    </a>
+                    <a href="?status=Pending{% if doctor_filter != 'All' %}&doctor={{ doctor_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}" 
+                       class="btn btn-sm {% if status_filter == 'Pending' %}btn-warning{% else %}btn-outline-warning{% endif %}">
+                        Pending
+                    </a>
+                    <a href="?status=Confirmed{% if doctor_filter != 'All' %}&doctor={{ doctor_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}" 
+                       class="btn btn-sm {% if status_filter == 'Confirmed' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        Confirmed
+                    </a>
+                    <a href="?status=Completed{% if doctor_filter != 'All' %}&doctor={{ doctor_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}" 
+                       class="btn btn-sm {% if status_filter == 'Completed' %}btn-success{% else %}btn-outline-success{% endif %}">
+                        Completed
+                    </a>
+                </div>
+            </div>
+
+            <!-- Doctor Dropdown -->
+            <div class="col-lg-3 col-md-6">
+                <select name="doctor" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="All">-- All Doctors --</option>
+                    {% for doc in doctors %}
+                        <option value="{{ doc.id }}" {% if doctor_filter|stringformat:"s" == doc.id|stringformat:"s" %}selected{% endif %}>
+                            {{ doc.name }} ({{ doc.department }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Date Filter -->
+            <div class="col-lg-2 col-md-4">
+                <input type="date" name="date" class="form-control form-control-sm" value="{{ date_filter }}" placeholder="Filter Date" onchange="this.form.submit()">
+            </div>
+
+            <!-- Search Field -->
+            <div class="col-lg-3 col-md-6">
+                <div class="input-group input-group-sm">
+                    <input type="text" name="q" class="form-control" placeholder="Search patient or doctor..." value="{{ search_query }}">
+                    <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i></button>
+                </div>
+            </div>
+
+            <!-- Reset Link -->
+            <div class="col-lg-1 col-md-2 text-end">
+                <a href="{% url 'staff_dashboard' %}" class="btn btn-sm btn-outline-secondary w-100" title="Clear all filters">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Appointments Management Table -->
+    <div class="custom-card">
+        <div class="custom-card-header">
+            <h6 class="fw-bold mb-0">Appointments Schedule ({{ appointments.count }})</h6>
+            <div class="small text-muted">Click actions below to change appointment status instantly.</div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-custom mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Patient Details</th>
+                        <th>Doctor & Specialty</th>
+                        <th>Scheduled Date & Slot</th>
+                        <th>Status</th>
+                        <th>Clinical Report</th>
+                        <th class="text-end">Status Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appt in appointments %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-light text-dark border">#{{ appt.id }}</span>
+                                <div class="text-muted" style="font-size: 0.7rem;">{{ appt.created_date|date:"M d, H:i" }}</div>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark">{{ appt.patient.full_name }}</div>
+                                <div class="text-muted small"><i class="bi bi-telephone me-1"></i> {{ appt.patient.phone }}</div>
+                                <div class="text-secondary small text-truncate" style="max-width: 220px;" title="{{ appt.reason }}">
+                                    <i class="bi bi-info-circle me-1"></i> {{ appt.reason }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark">{{ appt.doctor.name }}</div>
+                                <span class="badge bg-{{ appt.doctor.badge_color }}-subtle text-{{ appt.doctor.badge_color }} small">
+                                    {{ appt.doctor.department }}
+                                </span>
+                            </td>
+                            <td>
+                                <div><i class="bi bi-calendar3 me-1 text-muted"></i> <strong>{{ appt.date|date:"M d, Y" }}</strong></div>
+                                <div class="text-primary fw-semibold small"><i class="bi bi-clock me-1"></i> {{ appt.time_slot }}</div>
+                            </td>
+                            <td>
+                                <span class="badge {{ appt.status_badge_class }} py-2 px-3">
+                                    {{ appt.status }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if appt.medical_report %}
+                                    <a href="{% url 'medical_report_detail' appt.medical_report.id %}" class="btn btn-sm btn-outline-success">
+                                        <i class="bi bi-check2-circle me-1"></i> View Report
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'staff_create_report' appt.id %}" class="btn btn-sm btn-outline-info">
+                                        <i class="bi bi-file-earmark-plus me-1"></i> Add Report
+                                    </a>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <!-- Status Change Form -->
+                                <form method="POST" action="{% url 'staff_update_status' appt.id %}" class="d-inline-flex gap-1">
+                                    {% csrf_token %}
+                                    
+                                    {% if appt.status == 'Pending' %}
+                                        <button type="submit" name="status" value="Confirmed" class="btn btn-sm btn-success" title="Confirm this appointment">
+                                            <i class="bi bi-check-lg me-1"></i> Confirm
+                                        </button>
+                                        <button type="submit" name="status" value="Cancelled" class="btn btn-sm btn-outline-danger" title="Cancel this appointment">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    {% elif appt.status == 'Confirmed' %}
+                                        <button type="submit" name="status" value="Completed" class="btn btn-sm btn-primary" title="Mark as Completed">
+                                            <i class="bi bi-check2-all me-1"></i> Complete
+                                        </button>
+                                        <button type="submit" name="status" value="Cancelled" class="btn btn-sm btn-outline-danger" title="Cancel this appointment">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    {% elif appt.status == 'Completed' %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle py-2 px-2">
+                                            <i class="bi bi-check-circle me-1"></i> Finished
+                                        </span>
+                                    {% elif appt.status == 'Cancelled' %}
+                                        <button type="submit" name="status" value="Pending" class="btn btn-sm btn-outline-secondary" title="Reopen as Pending">
+                                            <i class="bi bi-arrow-repeat me-1"></i> Reopen
+                                        </button>
+                                    {% endif %}
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox display-6 d-block mb-2 text-secondary"></i>
+                                <p class="mb-0">No appointments matched the specified filter criteria.</p>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

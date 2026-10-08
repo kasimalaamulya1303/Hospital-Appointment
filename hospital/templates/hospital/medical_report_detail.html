@@ -1,0 +1,117 @@
+{% extends 'hospital/base.html' %}
+{% load static %}
+
+{% block title %}Medical Report #{{ report.id }} - AuraCare Hospital{% endblock %}
+
+{% block content %}
+<div class="bg-light py-3 border-bottom no-print">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div>
+            <a href="{% url 'patient_dashboard' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i> Print / Download PDF
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="medical-report-sheet">
+        <!-- Hospital Header -->
+        <div class="report-header">
+            <div class="row align-items-center">
+                <div class="col-8">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="brand-icon" style="width: 36px; height: 36px; font-size: 1.1rem;"><i class="bi bi-hospital"></i></span>
+                        <h3 class="fw-bold mb-0 text-dark">AuraCare Health System</h3>
+                    </div>
+                    <p class="text-muted small mb-0">100 Medical Center Parkway, Metro City • Emergency: +1 (800) 428-2273</p>
+                    <p class="text-muted small mb-0">Accredited Clinical Consultation & Diagnostic Services</p>
+                </div>
+                <div class="col-4 text-end">
+                    <span class="badge bg-primary px-3 py-2 fs-6">Clinical Report</span>
+                    <div class="text-muted small mt-2">Report #{{ report.id }}</div>
+                    <div class="text-dark fw-bold small">Date: {{ report.report_date|date:"F d, Y" }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Patient & Doctor Information Grid -->
+        <div class="row g-3 mb-4 bg-light p-3 rounded-3 border">
+            <div class="col-md-6">
+                <h6 class="text-uppercase text-muted fw-bold small mb-2">Patient Demographics</h6>
+                <div><strong class="text-dark">{{ report.patient.full_name }}</strong></div>
+                <div class="text-secondary small">Age / Gender: {{ report.patient.age|default:"N/A" }} yrs • {{ report.patient.gender }}</div>
+                <div class="text-secondary small">Contact: {{ report.patient.phone }} | {{ report.patient.email }}</div>
+                {% if report.patient.blood_group %}
+                    <div class="text-secondary small">Blood Group: <strong>{{ report.patient.blood_group }}</strong></div>
+                {% endif %}
+            </div>
+            <div class="col-md-6 border-start-md">
+                <h6 class="text-uppercase text-muted fw-bold small mb-2">Attending Physician</h6>
+                <div><strong class="text-dark">{{ report.doctor.name }}</strong></div>
+                <div class="text-primary small fw-semibold">{{ report.doctor.department }} Department</div>
+                <div class="text-secondary small">{{ report.doctor.specialization }}</div>
+                <div class="text-secondary small">{{ report.doctor.qualification }}</div>
+            </div>
+        </div>
+
+        <!-- Associated Appointment Reference if any -->
+        {% if report.appointment %}
+            <div class="mb-4 pb-3 border-bottom small text-muted d-flex justify-content-between">
+                <span><i class="bi bi-calendar-check me-1"></i> Consultation Appointment Ref: <strong>#{{ report.appointment.id }}</strong> ({{ report.appointment.date }} at {{ report.appointment.time_slot }})</span>
+                <span>Chief Complaint: {{ report.appointment.reason }}</span>
+            </div>
+        {% endif %}
+
+        <!-- Clinical Diagnosis -->
+        <div class="mb-4">
+            <h5 class="fw-bold text-dark border-bottom pb-2">
+                <i class="bi bi-clipboard2-pulse me-2 text-danger"></i> Clinical Diagnosis & Evaluation
+            </h5>
+            <div class="p-3 bg-white border rounded-3 text-dark">
+                {{ report.diagnosis|linebreaks }}
+            </div>
+        </div>
+
+        <!-- Prescribed Medications -->
+        <div class="mb-4">
+            <h5 class="fw-bold text-dark border-bottom pb-2">
+                <i class="bi bi-capsule me-2 text-primary"></i> Rx — Prescribed Medications & Dosage
+            </h5>
+            <div class="prescription-box">
+                {{ report.prescription }}
+            </div>
+        </div>
+
+        <!-- Doctor's Advice / Notes -->
+        {% if report.doctor_notes %}
+            <div class="mb-4">
+                <h5 class="fw-bold text-dark border-bottom pb-2">
+                    <i class="bi bi-card-checklist me-2 text-success"></i> Clinical Advice & Follow-Up Instructions
+                </h5>
+                <div class="p-3 bg-light rounded-3 text-secondary small">
+                    {{ report.doctor_notes|linebreaks }}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Footer / Signature -->
+        <div class="row pt-4 mt-5 border-top align-items-end">
+            <div class="col-6 small text-muted">
+                <i class="bi bi-shield-check text-success me-1"></i>
+                This is a digitally generated medical report issued through AuraCare Health Portal.
+            </div>
+            <div class="col-6 text-end">
+                <div class="fw-bold text-dark">{{ report.doctor.name }}</div>
+                <div class="text-muted small">{{ report.doctor.qualification }}</div>
+                <div class="text-muted small">Specialist, {{ report.doctor.department }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

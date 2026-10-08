@@ -1,0 +1,80 @@
+{% extends 'hospital/base.html' %}
+{% load static %}
+
+{% block title %}Appointment Confirmed - AuraCare Hospital{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9">
+            <div class="custom-card p-4 p-md-5 text-center shadow-lg border-0" style="border-radius: 24px;">
+                <div class="stat-icon mx-auto bg-success-subtle text-success mb-3" style="width: 80px; height: 80px; font-size: 2.5rem; border-radius: 50%;">
+                    <i class="bi bi-check-lg"></i>
+                </div>
+
+                <span class="badge bg-warning-subtle text-dark border border-warning-subtle px-3 py-2 rounded-pill fw-semibold mb-2">
+                    Appointment Reference #{{ appointment.id }}
+                </span>
+
+                <h2 class="fw-bold mb-2">Appointment Request Submitted!</h2>
+                <p class="text-muted mb-4">
+                    Your appointment has been registered and is currently marked as 
+                    <span class="badge {{ appointment.status_badge_class }}">{{ appointment.status }}</span>.
+                </p>
+
+                <!-- Digital Slip Card -->
+                <div class="bg-light p-4 rounded-4 text-start mb-4 border">
+                    <div class="d-flex justify-content-between align-items-center pb-3 mb-3 border-bottom">
+                        <div>
+                            <span class="text-muted small text-uppercase fw-bold">Specialist Doctor</span>
+                            <h5 class="fw-bold mb-0 text-dark">{{ appointment.doctor.name }}</h5>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle small">
+                                {{ appointment.doctor.department }}
+                            </span>
+                        </div>
+                        <div class="text-end">
+                            <span class="text-muted small text-uppercase fw-bold">Consultation Fee</span>
+                            <div class="h5 fw-bold text-success mb-0">${{ appointment.doctor.consultation_fee }}</div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block"><i class="bi bi-calendar-event me-1"></i> Date</span>
+                            <strong class="text-dark">{{ appointment.date|date:"l, F j, Y" }}</strong>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block"><i class="bi bi-clock me-1"></i> Time Slot</span>
+                            <strong class="text-primary">{{ appointment.time_slot }}</strong>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block"><i class="bi bi-person me-1"></i> Patient Name</span>
+                            <strong class="text-dark">{{ appointment.patient.full_name }}</strong>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block"><i class="bi bi-telephone me-1"></i> Registered Phone</span>
+                            <strong class="text-dark">{{ appointment.patient.phone }}</strong>
+                        </div>
+                        <div class="col-12">
+                            <span class="text-muted small d-block"><i class="bi bi-chat-text me-1"></i> Reason</span>
+                            <div class="text-secondary small">{{ appointment.reason }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column flex-sm-row justify-content-center gap-3">
+                    <a href="{% url 'patient_dashboard' %}" class="btn btn-primary px-4 py-2">
+                        <i class="bi bi-person-circle me-1"></i> Go to Patient Dashboard
+                    </a>
+                    <a href="{% url 'book_appointment' %}" class="btn btn-outline-secondary px-4 py-2">
+                        <i class="bi bi-plus-circle me-1"></i> Book Another Appointment
+                    </a>
+                    <button type="button" class="btn btn-light border px-4 py-2" onclick="window.print()">
+                        <i class="bi bi-printer me-1"></i> Print Slip
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

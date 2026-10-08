@@ -1,0 +1,207 @@
+{% extends 'hospital/base.html' %}
+{% load static %}
+
+{% block title %}Find Specialist Doctors - AuraCare Hospital{% endblock %}
+
+{% block content %}
+<div class="bg-light py-4 border-bottom">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-7">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1 small">
+                        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Specialists Directory</li>
+                    </ol>
+                </nav>
+                <h1 class="h2 fw-bold mb-1">Our Medical Specialists</h1>
+                <p class="text-muted small mb-0">Browse through board-certified physicians, review clinical qualifications, and reserve consultation slots.</p>
+            </div>
+            <div class="col-md-5 mt-3 mt-md-0">
+                <!-- Search input with instant JS filtering -->
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" id="doctorSearchInput" class="form-control border-start-0 shadow-none ps-0" placeholder="Search doctor by name, specialty, or condition..." value="{{ search_query }}">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    <!-- Department Filter Bar (JavaScript Interactive) -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4 pb-2 border-bottom">
+        <div class="d-flex flex-wrap gap-2" id="deptFilterGroup">
+            {% for dept in department_list %}
+                <button type="button" 
+                        class="dept-pill dept-filter-pill {% if selected_department == dept.name %}active{% endif %}"
+                        data-dept="{{ dept.name }}">
+                    {% if dept.name == 'Cardiology' %}
+                        <i class="bi bi-heart-pulse-fill text-danger"></i>
+                    {% elif dept.name == 'Pediatrics' %}
+                        <i class="bi bi-emoji-smile-fill text-warning"></i>
+                    {% elif dept.name == 'Orthopedics' %}
+                        <i class="bi bi-activity text-success"></i>
+                    {% elif dept.name == 'Neurology' %}
+                        <i class="bi bi-diagram-3-fill text-primary"></i>
+                    {% elif dept.name == 'General Medicine' %}
+                        <i class="bi bi-bandaid-fill text-info"></i>
+                    {% else %}
+                        <i class="bi bi-grid-fill text-secondary"></i>
+                    {% endif %}
+                    <span>{{ dept.name }}</span>
+                    <span class="badge bg-secondary-subtle text-dark ms-1" style="font-size: 0.72rem;">
+                        {{ dept.count }}
+                    </span>
+                </button>
+            {% endfor %}
+        </div>
+
+        <div class="small text-muted">
+            Showing <strong id="visibleDoctorCount">{{ doctors.count }}</strong> specialist(s)
+        </div>
+    </div>
+
+    <!-- Doctor Grid -->
+    <div class="row g-4" id="doctorsGrid">
+        {% for doctor in doctors %}
+            <div class="col-lg-4 col-md-6 doctor-card-item" 
+                 data-department="{{ doctor.department }}" 
+                 data-name="{{ doctor.name }}" 
+                 data-specialization="{{ doctor.specialization }}">
+                <div class="doctor-card">
+                    <div class="p-4">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="doctor-avatar-wrap" style="flex-shrink: 0;">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <h5 class="fw-bold mb-1 text-dark">{{ doctor.name }}</h5>
+                                </div>
+                                <span class="badge bg-{{ doctor.badge_color }}-subtle text-{{ doctor.badge_color }} border border-{{ doctor.badge_color }}-subtle">
+                                    {{ doctor.department }}
+                                </span>
+                                <div class="text-muted small mt-1">
+                                    {{ doctor.qualification }} • {{ doctor.experience_years }} yrs exp
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="small text-muted mb-1"><i class="bi bi-award-fill text-primary me-1"></i> Specialization:</div>
+                            <div class="fw-semibold text-dark small">{{ doctor.specialization }}</div>
+                        </div>
+
+                        <div class="bg-light p-3 rounded-3 mb-3 small">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted"><i class="bi bi-calendar3 me-1"></i> Available Days:</span>
+                                <span class="fw-semibold text-dark">{{ doctor.available_days }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted"><i class="bi bi-cash-stack me-1"></i> Consultation Fee:</span>
+                                <span class="fw-bold text-success">${{ doctor.consultation_fee }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted"><i class="bi bi-check-circle-fill text-success me-1"></i> Status:</span>
+                                <span class="text-success fw-semibold">Accepting Bookings</span>
+                            </div>
+                        </div>
+
+                        <p class="text-muted small text-truncate-2 mb-0" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 38px;">
+                            {{ doctor.bio|default:"Dedicated specialist offering comprehensive patient-centered evaluations, treatment plans, and continuous care." }}
+                        </p>
+                    </div>
+
+                    <div class="p-4 pt-0 mt-auto border-top pt-3 d-flex gap-2">
+                        <button type="button" 
+                                class="btn btn-outline-secondary btn-sm flex-fill"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#doctorDetailModal"
+                                data-doc-id="{{ doctor.id }}"
+                                data-doc-name="{{ doctor.name }}"
+                                data-doc-dept="{{ doctor.department }}"
+                                data-doc-spec="{{ doctor.specialization }}"
+                                data-doc-qual="{{ doctor.qualification }}"
+                                data-doc-fee="{{ doctor.consultation_fee }}"
+                                data-doc-days="{{ doctor.available_days }}"
+                                data-doc-bio="{{ doctor.bio }}">
+                            <i class="bi bi-info-circle me-1"></i> Profile
+                        </button>
+
+                        <a href="{% url 'book_appointment' %}?doctor={{ doctor.id }}" class="btn btn-primary btn-sm flex-fill">
+                            <i class="bi bi-calendar-plus me-1"></i> Book Slot
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-person-x display-4 text-muted mb-3 d-block"></i>
+                <h5>No doctors found</h5>
+                <p class="text-muted">No specialists match your criteria. Try resetting the department filter.</p>
+                <a href="{% url 'doctor_list' %}" class="btn btn-primary btn-sm">Reset Filters</a>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- No Results Message (For live JS filter) -->
+    <div id="noDoctorsFound" class="text-center py-5" style="display: none;">
+        <i class="bi bi-search display-5 text-muted mb-3 d-block"></i>
+        <h5>No Doctors Found Matching Your Criteria</h5>
+        <p class="text-muted small">Try searching another term or selecting "All" departments above.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<!-- Doctor Profile Details Modal -->
+<div class="modal fade" id="doctorDetailModal" tabindex="-1" aria-labelledby="doctorDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold" id="modalDocName">Doctor Profile</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="doctor-avatar-wrap me-3" style="width: 60px; height: 60px; font-size: 1.6rem;">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <div>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle" id="modalDocDept">Department</span>
+                        <div class="text-muted small mt-1" id="modalDocQual">Qualifications</div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="small text-muted fw-bold text-uppercase">Specialization Area</label>
+                    <p class="text-dark fw-semibold mb-0" id="modalDocSpec">Specialization details</p>
+                </div>
+
+                <div class="row g-2 mb-3 bg-light p-3 rounded-3">
+                    <div class="col-6">
+                        <small class="text-muted d-block"><i class="bi bi-calendar3 me-1"></i> Consultation Schedule</small>
+                        <span class="fw-semibold text-dark" id="modalDocDays">Mon - Fri</span>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted d-block"><i class="bi bi-cash-stack me-1"></i> Consultation Fee</small>
+                        <span class="fw-bold text-success" id="modalDocFee">$0</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="small text-muted fw-bold text-uppercase">Clinical Background & Bio</label>
+                    <p class="text-secondary small mb-0" id="modalDocBio">Bio notes</p>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-0">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                <a href="#" id="modalBookBtn" class="btn btn-primary btn-sm">
+                    <i class="bi bi-calendar2-check-fill me-1"></i> Proceed to Book Slot
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
